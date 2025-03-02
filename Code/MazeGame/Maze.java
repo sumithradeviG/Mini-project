@@ -60,15 +60,6 @@ class stepCalculation{
         return result;
     }
 
-    public void setVisited(int[] box, boolean value)
-    {
-        if(box[0] < 0 || box[0] >= visited.length || box[1] < 0 || box[1] >= visited[0].length)
-        {
-            return;
-        }
-        visited[box[0]][box[1]] = value;
-    }
-
 }
 
 public class Maze {
