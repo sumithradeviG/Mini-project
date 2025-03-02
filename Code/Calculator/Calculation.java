@@ -1,72 +1,74 @@
-package Calculator;
-
 import java.util.*;
 
-public class Calculation {
-    public static boolean isOperator(char operator){
-        switch (operator) {
-            case '+': return true;
-            case '-': return true;
-            case '*': return true;
-            case '/': return true;
-            case '^': return true;
-            case '(': return true;
-            case ')': return true;
-            default : return false;
-        }
-    }
+public class Calc {
 
-    public static int getPrecedance(char operator)
-    {
-        switch (operator) {
-            case '(': case ')': return 4;
-            case '^':  return 3;
-            case '*': case '/': return 2;
-            case '+': case '-': return 1;
-            default:  return -1;
-        }   
-    }
-
-    public static boolean checkPrecedance(char preOperator, char currOperator){
-        if(preOperator == '('){
-            return true;
-        }
-        int prevOpPreced = getPrecedance(preOperator);
-        int currOpPreced = getPrecedance(currOperator);
-        return currOpPreced > prevOpPreced ? true : false;
-    } 
-    public static void main(String[] args) {
-        String expression = "a+b*c-d/e^f";
-        String postFixExp = "";
-        Stack<Character> st = new Stack<>();
-
-        for(int i=0; i<expression.length(); i++){
-            String temp = "";
-            if(expression.charAt(i) >= 0 && expression.charAt(i) <=9){
-                temp += expression.charAt(i);
-            }
-            else if(isOperator(expression.charAt(i))){
-                if(st.empty()  || st.peek() == '(' || expression.charAt(i) == '(' ){
-                    st.push(expression.charAt(i));
-                }
-                else if(expression.charAt(i) == ')'){
-                    while (st.peek() != '(' && !(st.empty())) {
-                        postFixExp += st.pop();
-                    }
-                    st.pop();
-                }
-                else{
-                    char preOperator = st.peek();
-                    while (!checkPrecedance(preOperator, expression.charAt(i)) && !(st.empty())) 
-                    {
-                        postFixExp += st.pop();
-                        preOperator = st.peek();
-                    }
-                    st.push(expression.charAt(i));
-                }
-            }
-        }
+	public static int solve(String input) {
 
 
-    }
+		char[] expr = input.toCharArray();
+
+		Stack<Integer> val = new Stack<Integer>(); 					
+		Stack<Character> opr = new Stack<Character>(); 
+
+		for (int i = 0; i < expr.length; i++) {
+			if (expr[i] == ' ') continue;					        // Skipping spaces
+			if (expr[i] >= '0' && expr[i] <= '9') {					// If a number occurs, push it to number stack 'val'
+
+				StringBuffer temp = new StringBuffer();
+				while (i < expr.length && expr[i] >= '0' && expr[i] <= '9') temp.append(expr[i++]); 	// For more than one digit number	
+				val.push(Integer.parseInt(temp.toString()));
+			}
+			else if (expr[i] == '(') 
+                                opr.push(expr[i]); 							// Opening parenthesis, directly push it in 'opr'
+
+			else if (expr[i] == ')') {									// Closing parenthesis, solve the contents of the parenthesis
+				while (opr.peek() != '(') 
+                                        val.push(calculate(opr.pop(), val.pop(), val.pop()));
+				opr.pop();                                                                              // pop the open bracket
+			}
+
+			else if (expr[i] == '%' || expr[i] == '+' || expr[i] == '-' || expr[i] == '*' || expr[i] == '/' || expr[i] == '^') {       // Operator push it in 'opr'
+				while (!opr.empty() && checkPrecedence(expr[i], opr.peek()))
+                                        val.push(calculate(opr.pop(), val.pop(), val.pop())); // Loop activated when top of stack precedence is greater in precedence
+				opr.push(expr[i]);
+			}
+		}
+		while (!opr.empty()) val.push(calculate(opr.pop(), val.pop(), val.pop())); 			// Remaining Calculation in expression
+		return val.pop(); 										// Top of stack 'val' contains the answer
+	}
+
+
+
+
+	public static boolean checkPrecedence(char opr1, char opr2) {		// Returns true if opr1 >= opr2 else return false
+		if (opr2 == '(' || opr2 == ')') return false;
+		if ((opr1 == '^') && (opr2 == '*' || opr2 == '/' || opr2 == '+' || opr2 == '-' || opr2 == '%')) return false;    	
+		if ((opr1 == '*' || opr1 == '/') && (opr2 == '+' || opr2 == '-')) return false;	
+		else return true;		
+	}
+
+
+
+	public static int calculate(char op, int b, int a) {			// Calculates the values 
+		switch (op) {
+			case '%': return a % b;
+			case '+': return a + b;
+			case '-': return a - b;
+			case '*': return a * b;
+			case '/': if (b == 0) throw new UnsupportedOperationException("Cannot divide by zero"); return a / b;	//to handle divide by zero
+			case '^': return (int)Math.pow(b,a);
+		}
+		return 0;
+	}
+
+
+
+	
+	public static void main(String[] args) { 				// Main method
+		String in;
+		Scanner sc = new Scanner(System.in);
+		System.out.println("Enter an expression with spaces");	        // Like 2 * ( ( 3 + 4 ) / 7 ) % 3 and not 2*(3+4)/7)%3
+		in = sc.nextLine();
+		System.out.println("Answer = " + Calc.solve(in));	
+	}
 }
